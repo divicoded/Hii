@@ -961,17 +961,6 @@ function buildQuotes(){
     const card = document.createElement('div');
     card.className = 'quote-card';
     card.textContent = quote;
-    card.addEventListener('click',()=>{
-      if(window.Particle){
-        if(card.paused){
-          window.Particle.resume();
-          card.paused = false;
-        } else {
-          window.Particle.pause();
-          card.paused = true;
-        }
-      }
-    });
     
     const imageHolder = document.createElement('div');
     imageHolder.className = 'quote-image';
