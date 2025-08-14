@@ -1,115 +1,692 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
-<title>Live Dynamic Greeting</title>
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Yokoso!!</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 <style>
 :root{
-  --accent:#ff6fa3; --glass:rgba(255,255,255,0.1); --text:#fff; --line:rgba(255,255,255,0.2);
+  --accent: #3b82f6;
+  --accent-light: #60a5fa;
+  --accent-dark: #1d4ed8;
+  --glass: rgba(255,255,255,0.08);
+  --glass-border: rgba(255,255,255,0.12);
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
+  --text-muted: #9ca3af;
+  --surface: rgba(17, 24, 39, 0.6);
+  --surface-elevated: rgba(31, 41, 55, 0.8);
+  --shadow-soft: 0 4px 32px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 8px 64px rgba(0, 0, 0, 0.15);
+  --border-radius: 16px;
+  --border-radius-lg: 24px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;padding:0;overflow-x:hidden}
-body{font-family:system-ui,-apple-system,sans-serif;color:var(--text);background:var(--bg);position:relative}
 
-.bg-ambient{position:fixed;inset:0;z-index:1;background:var(--bg)}
-.canvasWrap{position:fixed;inset:0;z-index:2;pointer-events:none}
-canvas{display:block}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-.container{position:relative;z-index:3;padding:4px 4px 60px;min-height:100vh;display:flex;flex-direction:column}
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
 
-.header{margin-bottom:20px;margin-left:14px}
-.hi{font-family:'Dancing Script',cursive;font-size:16px;margin:0;color:var(--accent)}
-.greeting{font-family:'Comfortaa',cursive;font-size:24px;font-weight:700;margin:4px 0 0;color:var(--text)}
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+  background: var(--bg);
+  position: relative;
+  line-height: 1.6;
+  font-weight: 400;
+}
 
-.season-toggle{position:fixed;top:8px;right:8px;z-index:10;width:60px;height:60px;border-radius:50%;background:var(--glass);backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;animation:float 3s ease-in-out infinite;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.bg-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: var(--bg);
+}
 
-.time-card{background:var(--glass);backdrop-filter:blur(15px);border-radius:16px;padding:16px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1);text-align:center}
-.time{font-size:18px;font-weight:700;margin-bottom:4px}
-.date{font-size:14px;opacity:0.8}
+.canvasWrap {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
 
-.analog-clock{width:160px;height:160px;margin:20px auto;position:relative;background:var(--clock-bg);border-radius:50%;box-shadow:var(--clock-shadow);display:flex;align-items:center;justify-content:center}
-.clock-face{width:140px;height:140px;border-radius:50%;background:var(--clock-face);position:relative;box-shadow:inset 0 2px 10px rgba(0,0,0,0.1)}
-.clock-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;background:var(--text);border-radius:50%;z-index:5}
-.hour-hand,.minute-hand,.second-hand{position:absolute;background:var(--text);border-radius:2px;transform-origin:bottom center;top:50%;left:50%}
-.hour-hand{width:4px;height:40px;margin-left:-2px;margin-top:-40px}
-.minute-hand{width:2px;height:55px;margin-left:-1px;margin-top:-55px}
-.second-hand{width:1px;height:60px;margin-left:-0.5px;margin-top:-60px;background:var(--accent)}
+canvas {
+  display: block;
+}
 
-.quotes-section{position:relative}
-.quote-line{position:absolute;left:20px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,transparent 0%,var(--line) 10%,var(--line) 90%,transparent 100%)}
-.quotes-container{display:flex;flex-direction:column;gap:16px;margin-left:40px;padding-left:20px}
-.quote-item{display:flex;align-items:center;gap:16px}
-.quote-card{background:var(--glass);backdrop-filter:blur(15px);border-radius:20px;padding:14px 18px;flex:1;border:1px solid rgba(255,255,255,0.1);font-size:15px;line-height:1.4;animation:floatQuote 4s ease-in-out infinite;cursor:pointer}
-.quote-image{width:60px;height:60px;border-radius:12px;background:var(--glass);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);animation:floatImage 3s ease-in-out infinite;flex-shrink:0}
-@keyframes floatQuote{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
-@keyframes floatImage{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
-.quote-card:nth-child(2n){animation-delay:-2s}
-.quote-card:nth-child(3n){animation-delay:-1s}
+.container {
+  position: relative;
+  z-index: 3;
+  padding: 2rem;
+  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
-.copyright{position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:11px;opacity:0.6;text-align:center;z-index:10;white-space:nowrap}
+/* Header Section */
+.header-section {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: start;
+  margin-bottom: 3rem;
+}
 
-/* Season backgrounds and text colors */
-.summer{--bg:linear-gradient(180deg,#ff9800,#ff5722);--text:#2c1810;--accent:#d84315;--line:rgba(44,24,16,0.3);--clock-bg:linear-gradient(145deg,#fff3e0,#fbe9d0);--clock-face:linear-gradient(145deg,#fff8f0,#f5f5f5);--clock-shadow:0 8px 25px rgba(255,87,34,0.3),inset 0 1px 3px rgba(255,255,255,0.3)}
-.winter{--bg:linear-gradient(180deg,#87ceeb,#ffffff);--text:#1a365d;--accent:#2b77ad;--line:rgba(26,54,93,0.3);--clock-bg:linear-gradient(145deg,#f0f8ff,#e6f3ff);--clock-face:linear-gradient(145deg,#ffffff,#f8fbff);--clock-shadow:0 8px 25px rgba(135,206,235,0.3),inset 0 1px 3px rgba(255,255,255,0.5)}
-.monsoon{--bg:linear-gradient(180deg,#1e3c72,#2a5298);--text:#e2f1ff;--accent:#64b5f6;--line:rgba(226,241,255,0.3);--clock-bg:linear-gradient(145deg,#334d6e,#2a4765);--clock-face:linear-gradient(145deg,#3a556f,#2d4560);--clock-shadow:0 8px 25px rgba(30,60,114,0.4),inset 0 1px 3px rgba(255,255,255,0.1)}
-.spring{--bg:linear-gradient(180deg,#ffc0cb,#ffffff);--text:#4a154b;--accent:#c2185b;--line:rgba(74,21,75,0.3);--clock-bg:linear-gradient(145deg,#fce4ec,#f8bbd9);--clock-face:linear-gradient(145deg,#fff0f3,#fdf2f8);--clock-shadow:0 8px 25px rgba(255,192,203,0.3),inset 0 1px 3px rgba(255,255,255,0.4)}
-.autumn{--bg:linear-gradient(180deg,#2b1208,#150b07);--text:#f4e4d6;--accent:#ff8a65;--line:rgba(244,228,214,0.3);--clock-bg:linear-gradient(145deg,#3d1f0f,#2f1509);--clock-face:linear-gradient(145deg,#4a2313,#3a1c0f);--clock-shadow:0 8px 25px rgba(43,18,8,0.4),inset 0 1px 3px rgba(255,138,101,0.1)}
-.prewinter{--bg:linear-gradient(180deg,#4682b4,#ffffff);--text:#1e3a5f;--accent:#1976d2;--line:rgba(30,58,95,0.3);--clock-bg:linear-gradient(145deg,#e3f2fd,#bbdefb);--clock-face:linear-gradient(145deg,#f3f9ff,#e8f4ff);--clock-shadow:0 8px 25px rgba(70,130,180,0.3),inset 0 1px 3px rgba(255,255,255,0.3)}
+.greeting-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-@media (max-width:480px){
-  .hi{font-size:14px}
-  .greeting{font-size:20px}
-  .quote-card{font-size:14px;padding:12px 16px}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: fit-content;
+  margin-bottom: 1rem;
+  transition: var(--transition);
+}
+
+.status-badge:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.greeting-text {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--text-primary), var(--accent-light));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.greeting-subtitle {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+
+.season-toggle {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  cursor: pointer;
+  font-size: 2rem;
+  transition: var(--transition);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  min-height: 80px;
+}
+
+.season-toggle:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: var(--shadow-medium);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* Main Content Grid */
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+/* Time Card */
+.time-card {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-soft);
+  transition: var(--transition);
+}
+
+.time-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+
+.time-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3rem;
+  font-weight: 500;
+  color: var(--accent-light);
+  text-align: center;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.date-display {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+
+.season-display {
+  text-align: center;
+  color: var(--accent-light);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  background: var(--glass);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  display: inline-block;
+}
+
+/* Analog Clock */
+.clock-card {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.clock-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+
+.analog-clock {
+  width: 200px;
+  height: 200px;
+  position: relative;
+  background: var(--clock-bg);
+  border-radius: 50%;
+  box-shadow: var(--clock-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clock-face {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--clock-face);
+  position: relative;
+  box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.clock-markers {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.clock-marker {
+  position: absolute;
+  background: var(--text-muted);
+  left: 50%;
+  top: 0;
+  transform-origin: 50% 90px;
+}
+
+.clock-marker.hour {
+  width: 3px;
+  height: 20px;
+  margin-left: -1.5px;
+  background: var(--accent);
+}
+
+.clock-marker.minute {
+  width: 1px;
+  height: 10px;
+  margin-left: -0.5px;
+}
+
+.clock-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.hour-hand, .minute-hand, .second-hand {
+  position: absolute;
+  background: var(--text-primary);
+  border-radius: 4px;
+  transform-origin: bottom center;
+  top: 50%;
+  left: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hour-hand {
+  width: 6px;
+  height: 50px;
+  margin-left: -3px;
+  margin-top: -50px;
+  background: var(--accent);
+}
+
+.minute-hand {
+  width: 4px;
+  height: 70px;
+  margin-left: -2px;
+  margin-top: -70px;
+  background: var(--text-primary);
+}
+
+.second-hand {
+  width: 2px;
+  height: 80px;
+  margin-left: -1px;
+  margin-top: -80px;
+  background: #ef4444;
+  transition: transform 0.1s ease-out;
+}
+
+/* Quotes Section */
+.quotes-section {
+  background: var(--surface);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-soft);
+  transition: var(--transition);
+}
+
+.quotes-section:hover {
+  box-shadow: var(--shadow-medium);
+}
+
+.quotes-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.quotes-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.quotes-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.quotes-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.quotes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quote-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.quote-item:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: var(--accent);
+  transform: translateX(8px);
+}
+
+.quote-image {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--shadow-soft);
+}
+
+.quote-card {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  border-top: 1px solid var(--glass-border);
+  margin-top: 3rem;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.heart {
+  color: #ef4444;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Season Themes */
+.summer {
+  --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --accent: #f59e0b;
+  --accent-light: #fbbf24;
+  --clock-bg: linear-gradient(135deg, #fff7ed, #fed7aa);
+  --clock-face: linear-gradient(135deg, #fffbf0, #fef3c7);
+  --clock-shadow: 0 12px 40px rgba(245, 158, 11, 0.2);
+}
+
+.winter {
+  --bg: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+  --accent: #00b894;
+  --accent-light: #00cec9;
+  --clock-bg: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  --clock-face: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  --clock-shadow: 0 12px 40px rgba(0, 184, 148, 0.2);
+}
+
+.monsoon {
+  --bg: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
+  --accent: #3742fa;
+  --accent-light: #5352ed;
+  --clock-bg: linear-gradient(135deg, #eef2ff, #e0e7ff);
+  --clock-face: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  --clock-shadow: 0 12px 40px rgba(55, 66, 250, 0.2);
+}
+
+.spring {
+  --bg: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%);
+  --accent: #e17055;
+  --accent-light: #fd79a8;
+  --clock-bg: linear-gradient(135deg, #fef7f0, #fed7d7);
+  --clock-face: linear-gradient(135deg, #fffbfa, #fef2f2);
+  --clock-shadow: 0 12px 40px rgba(225, 112, 85, 0.2);
+}
+
+.autumn {
+  --bg: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+  --accent: #e17055;
+  --accent-light: #fd79a8;
+  --clock-bg: linear-gradient(135deg, #451a03, #7c2d12);
+  --clock-face: linear-gradient(135deg, #78350f, #92400e);
+  --clock-shadow: 0 12px 40px rgba(225, 112, 85, 0.3);
+}
+
+.prewinter {
+  --bg: linear-gradient(135deg, #81ecec 0%, #74b9ff 100%);
+  --accent: #00b894;
+  --accent-light: #00cec9;
+  --clock-bg: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+  --clock-face: linear-gradient(135deg, #f7fefc, #f0fdf4);
+  --clock-shadow: 0 12px 40px rgba(0, 184, 148, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .container {
+    padding: 1.5rem;
+  }
+  
+  .main-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .time-display {
+    font-size: 2.5rem;
+  }
+  
+  .analog-clock {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .clock-face {
+    width: 140px;
+    height: 140px;
+  }
+  
+  clock-marker {
+    transform-origin: 50% 70px; /* Add this line */
+  }
+}
+
+@media (max-width: 768px) {
+  .header-section {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .season-toggle {
+    align-self: center;
+    min-width: 60px;
+    min-height: 60px;
+    padding: 0.75rem;
+    font-size: 1.5rem;
+  }
+  
+  .greeting-text {
+    font-size: 2.5rem;
+  }
+  
+  .time-card, .clock-card, .quotes-section {
+    padding: 1.5rem;
+  }
+  
+  .time-display {
+    font-size: 2rem;
+  }
+  
+  .analog-clock {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .clock-face {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .quote-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .quote-item:hover {
+    transform: translateY(-4px);
+  }
+  
+  .clock-marker {
+    transform-origin: 50% 60px; /* Add this line */
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .greeting-text {
+    font-size: 2rem;
+  }
+  
+  .time-display {
+    font-size: 1.75rem;
+  }
+  
+  .quotes-container {
+    gap: 0.75rem;
+  }
+  
+  .quote-card {
+    font-size: 0.875rem;
+  }
 }
 </style>
 </head>
-<body class="summer">
+<body class="prewinter">
   <div class="bg-ambient"></div>
-  <div class="canvasWrap"><canvas id="particles"></canvas></div>
+  <div class="canvasWrap"><canvas id="particles" width="640" height="1126" style="width: 320px; height: 563px;"></canvas></div>
 
   <div class="container">
-    <div class="header">
-      <h1 class="hi">Hii... (≧∇≦)ﾉ</h1>
-      <div class="greeting" id="greeting">Good morning</div>
-    </div>
-
-    <div class="season-toggle" id="seasonBtn">☀️</div>
-
-    <div class="time-card">
-      <div class="time" id="time">--:--:--</div>
-      <div class="date" id="date">Loading...</div>
-    </div>
-
-    <div class="analog-clock" id="analogClock">
-      <div class="clock-face">
-        <div class="hour-hand" id="hourHand"></div>
-        <div class="minute-hand" id="minuteHand"></div>
-        <div class="second-hand" id="secondHand"></div>
-        <div class="clock-center"></div>
+    <header class="header-section">
+      <div class="greeting-content">
+        <div class="status-badge">
+          <div class="status-indicator"></div>
+          <span>ONLINE</span>
+        </div>
+        <h1 class="greeting-text" id="greeting">Good Night</h1>
+        <p class="greeting-subtitle" id="greetingSubtitle">Time to rest and recharge for tomorrow</p>
       </div>
-    </div>
+      <div class="season-toggle" id="seasonBtn">☃</div>
+    </header>
 
-    <div class="quotes-section">
-      <div class="quote-line"></div>
-      <div class="quotes-container" id="quotesContainer"></div>
-    </div>
+    <main class="main-content">
+      <div class="time-card">
+        <div class="time-display" id="time">00:30:41</div>
+        <div class="date-display" id="date">Friday, August 15, 2025</div>
+        <div class="season-display" id="seasonName">Pre-Winter</div>
+      </div>
+
+      <div class="clock-card">
+        <div class="analog-clock" id="analogClock">
+          <div class="clock-face">
+            <div class="clock-markers" id="clockMarkers"><div class="clock-marker hour" style="transform: rotate(0deg);"></div><div class="clock-marker minute" style="transform: rotate(6deg);"></div><div class="clock-marker minute" style="transform: rotate(12deg);"></div><div class="clock-marker minute" style="transform: rotate(18deg);"></div><div class="clock-marker minute" style="transform: rotate(24deg);"></div><div class="clock-marker hour" style="transform: rotate(30deg);"></div><div class="clock-marker minute" style="transform: rotate(36deg);"></div><div class="clock-marker minute" style="transform: rotate(42deg);"></div><div class="clock-marker minute" style="transform: rotate(48deg);"></div><div class="clock-marker minute" style="transform: rotate(54deg);"></div><div class="clock-marker hour" style="transform: rotate(60deg);"></div><div class="clock-marker minute" style="transform: rotate(66deg);"></div><div class="clock-marker minute" style="transform: rotate(72deg);"></div><div class="clock-marker minute" style="transform: rotate(78deg);"></div><div class="clock-marker minute" style="transform: rotate(84deg);"></div><div class="clock-marker hour" style="transform: rotate(90deg);"></div><div class="clock-marker minute" style="transform: rotate(96deg);"></div><div class="clock-marker minute" style="transform: rotate(102deg);"></div><div class="clock-marker minute" style="transform: rotate(108deg);"></div><div class="clock-marker minute" style="transform: rotate(114deg);"></div><div class="clock-marker hour" style="transform: rotate(120deg);"></div><div class="clock-marker minute" style="transform: rotate(126deg);"></div><div class="clock-marker minute" style="transform: rotate(132deg);"></div><div class="clock-marker minute" style="transform: rotate(138deg);"></div><div class="clock-marker minute" style="transform: rotate(144deg);"></div><div class="clock-marker hour" style="transform: rotate(150deg);"></div><div class="clock-marker minute" style="transform: rotate(156deg);"></div><div class="clock-marker minute" style="transform: rotate(162deg);"></div><div class="clock-marker minute" style="transform: rotate(168deg);"></div><div class="clock-marker minute" style="transform: rotate(174deg);"></div><div class="clock-marker hour" style="transform: rotate(180deg);"></div><div class="clock-marker minute" style="transform: rotate(186deg);"></div><div class="clock-marker minute" style="transform: rotate(192deg);"></div><div class="clock-marker minute" style="transform: rotate(198deg);"></div><div class="clock-marker minute" style="transform: rotate(204deg);"></div><div class="clock-marker hour" style="transform: rotate(210deg);"></div><div class="clock-marker minute" style="transform: rotate(216deg);"></div><div class="clock-marker minute" style="transform: rotate(222deg);"></div><div class="clock-marker minute" style="transform: rotate(228deg);"></div><div class="clock-marker minute" style="transform: rotate(234deg);"></div><div class="clock-marker hour" style="transform: rotate(240deg);"></div><div class="clock-marker minute" style="transform: rotate(246deg);"></div><div class="clock-marker minute" style="transform: rotate(252deg);"></div><div class="clock-marker minute" style="transform: rotate(258deg);"></div><div class="clock-marker minute" style="transform: rotate(264deg);"></div><div class="clock-marker hour" style="transform: rotate(270deg);"></div><div class="clock-marker minute" style="transform: rotate(276deg);"></div><div class="clock-marker minute" style="transform: rotate(282deg);"></div><div class="clock-marker minute" style="transform: rotate(288deg);"></div><div class="clock-marker minute" style="transform: rotate(294deg);"></div><div class="clock-marker hour" style="transform: rotate(300deg);"></div><div class="clock-marker minute" style="transform: rotate(306deg);"></div><div class="clock-marker minute" style="transform: rotate(312deg);"></div><div class="clock-marker minute" style="transform: rotate(318deg);"></div><div class="clock-marker minute" style="transform: rotate(324deg);"></div><div class="clock-marker hour" style="transform: rotate(330deg);"></div><div class="clock-marker minute" style="transform: rotate(336deg);"></div><div class="clock-marker minute" style="transform: rotate(342deg);"></div><div class="clock-marker minute" style="transform: rotate(348deg);"></div><div class="clock-marker minute" style="transform: rotate(354deg);"></div></div>
+            <div class="hour-hand" id="hourHand" style="transform: rotate(15deg);"></div>
+            <div class="minute-hand" id="minuteHand" style="transform: rotate(180deg);"></div>
+            <div class="second-hand" id="secondHand" style="transform: rotate(246deg);"></div>
+            <div class="clock-center"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <section class="quotes-section">
+      <div class="quotes-header">
+        <div class="quotes-icon">💭</div>
+        <div>
+          <div class="quotes-title">Mindful Moments...</div>
+        </div>
+      </div>
+      <div class="quotes-container" id="quotesContainer"><div class="quote-item"><div class="quote-image" style="background-image: url(&quot;anim1.gif&quot;); background-size: cover; background-position: center center;"></div><div class="quote-card">Status: ALIVE !!</div></div><div class="quote-item"><div class="quote-image" style="background-image: url(&quot;anim2.gif&quot;); background-size: cover; background-position: center center;"></div><div class="quote-card">Be the plot twist your life didn't see coming.</div></div><div class="quote-item"><div class="quote-image" style="background-image: url(&quot;anim3.gif&quot;); background-size: cover; background-position: center center;"></div><div class="quote-card">One small positive thought can change your whole day.</div></div><div class="quote-item"><div class="quote-image" style="background-image: url(&quot;anim4.gif&quot;); background-size: cover; background-position: center center;"></div><div class="quote-card">Progress, not perfection.</div></div><div class="quote-item"><div class="quote-image" style="background-image: url(&quot;anim5.gif&quot;); background-size: cover; background-position: center center;"></div><div class="quote-card">You've survived 100% of your good days so far.</div></div><div class="quote-item"><div class="quote-image" style="background-image: url(&quot;anim6.gif&quot;); background-size: cover; background-position: center center;"></div><div class="quote-card">You don't need more time, you need less excuses</div></div><div class="quote-item"><div class="quote-image" style="background-image: url(&quot;anim7.gif&quot;); background-size: cover; background-position: center center;"></div><div class="quote-card">Kindness is free....sprinkle it everywhere. Have a nice day</div></div></div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <span>Crafted with</span>
+        <span class="heart">♥</span>
+        <span>by Div</span>
+      </div>
+    </footer>
   </div>
-
-  <div class="copyright">made by Div with 🎁🎉♡</div>
 
 <script>
 const prefersReduced = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 const timeEl = document.getElementById('time');
 const dateEl = document.getElementById('date');
 const greetingEl = document.getElementById('greeting');
+const greetingSubtitleEl = document.getElementById('greetingSubtitle');
 const seasonBtn = document.getElementById('seasonBtn');
+const seasonNameEl = document.getElementById('seasonName');
 const quotesContainer = document.getElementById('quotesContainer');
 const hourHand = document.getElementById('hourHand');
 const minuteHand = document.getElementById('minuteHand');
 const secondHand = document.getElementById('secondHand');
+const clockMarkers = document.getElementById('clockMarkers');
+
+// Create clock markers
+function createClockMarkers() {
+  for (let i = 0; i < 60; i++) {
+    const marker = document.createElement('div');
+    marker.className = `clock-marker ${i % 5 === 0 ? 'hour' : 'minute'}`;
+    marker.style.transform = `rotate(${i * 6}deg)`;
+    clockMarkers.appendChild(marker);
+  }
+}
 
 function formatClock(d){return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
 function formatDate(d){return d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
@@ -132,12 +709,27 @@ function updateClock(){
   secondHand.style.transform = `rotate(${secondAngle}deg)`;
   
   const h=now.getHours();
-  let g='Good Morning...';
-  if(h>=4&&h<17) g='Good Afternoon...';
-  else if(h>=17||h<1) g='Good Evening...';
-  else if(h>=1||h<4) g='Good Night...';
-  greetingEl.textContent=g;
+  let greeting, subtitle;
+  
+  if(h >= 0 && h < 4) {
+    greeting = 'Good Night...';
+    subtitle = 'Time to rest and recharge for tomorrow';
+  } else if(h >= 4 && h < 12) {
+    greeting = 'Good Morning...';
+    subtitle = 'Hope you have a productive day ahead!';
+  } else if(h >= 12 && h < 16) {
+    greeting = 'Good Afternoon...';
+    subtitle = 'Keep up the great work today!';
+  } else {
+    greeting = 'Good Evening...';
+    subtitle = 'Time to unwind and reflect on today';
+  }
+  
+  greetingEl.textContent = greeting;
+  greetingSubtitleEl.textContent = subtitle;
 }
+
+createClockMarkers();
 updateClock();
 if(!prefersReduced) setInterval(updateClock,1000);
 
@@ -324,7 +916,10 @@ window.Particle = engine;
 function setSeason(s){
   activeSeason = s;
   const emojis = {spring:'🌸',summer:'☀️',monsoon:'🌧️',autumn:'🍂',winter:'❄️',prewinter:'☃'};
+  const seasonNames = {spring:'Spring',summer:'Summer',monsoon:'Monsoon',autumn:'Autumn',winter:'Winter',prewinter:'Pre-Winter'};
+  
   seasonBtn.textContent = emojis[s]||'☀️';
+  seasonNameEl.textContent = seasonNames[s]||'Summer';
   document.body.className = s;
   localStorage.setItem('greet_season',s);
   if(window.Particle && window.Particle.setMode) window.Particle.setMode(s);
@@ -339,11 +934,11 @@ setSeason(activeSeason);
 
 const quotes = [
   'Status: ALIVE !!',
-  'Be the plot twist your life didn\’t see coming.',
+  'Be the plot twist your life didn\'t see coming.',
   'One small positive thought can change your whole day.',
   'Progress, not perfection.',
   'You\'ve survived 100% of your good days so far.',
-  'You don\’t need more time, you need less excuses',
+  'You don\'t need more time, you need less excuses',
   'Kindness is free....sprinkle it everywhere. Have a nice day'
 ];
 
@@ -357,7 +952,6 @@ const gifImages = [
   'anim7.gif'
 ];
 
-
 function buildQuotes(){
   quotesContainer.innerHTML = '';
   quotes.forEach((quote,i)=>{
@@ -367,7 +961,6 @@ function buildQuotes(){
     const card = document.createElement('div');
     card.className = 'quote-card';
     card.textContent = quote;
-    card.style.animationDelay = (i*0.1)+'s';
     card.addEventListener('click',()=>{
       if(window.Particle){
         if(card.paused){
@@ -382,21 +975,19 @@ function buildQuotes(){
     
     const imageHolder = document.createElement('div');
     imageHolder.className = 'quote-image';
-    imageHolder.style.animationDelay = (i*0.15)+'s';
     
     // Set background GIF image from array
     imageHolder.style.backgroundImage = `url('${gifImages[i]}')`;
     imageHolder.style.backgroundSize = 'cover';
     imageHolder.style.backgroundPosition = 'center';
     
-    item.appendChild(card);
     item.appendChild(imageHolder);
+    item.appendChild(card);
     quotesContainer.appendChild(item);
   });
-
 }
 
 buildQuotes();
 </script>
-</body>
-</html>
+
+</body></html>
